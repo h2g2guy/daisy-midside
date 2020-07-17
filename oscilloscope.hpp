@@ -44,8 +44,8 @@ public:
 
     void Init(OscilloscopeParams& params);
 
-    unsigned int GetGain();
-    void SetGain(unsigned int gain);
+    float GetGain();
+    void SetGain(float gain);
 
     unsigned int GetScale();
     void SetScale(unsigned int xScale);

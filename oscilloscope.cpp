@@ -20,6 +20,9 @@ void Oscilloscope::Init(OscilloscopeParams& params)
 unsigned int Oscilloscope::GetScale() { return scale; }
 void Oscilloscope::SetScale(unsigned int xScale) { scale = xScale; }
 
+float Oscilloscope::GetGain() { return overallGain; }
+void Oscilloscope::SetGain(float g) { overallGain = g; }
+
 constexpr int wrap(int i, int mod)
 {
     return (i + mod) % mod;

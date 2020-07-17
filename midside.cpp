@@ -23,6 +23,8 @@ Parameter bufferOffsetParam;
 
 Oscilloscope oscilloscopes[2];
 size_t scopeIndex;
+unsigned int encoderFunction = 0;
+int pendingChangeParam = 0;
 
 uint32_t lastScreenUpdate = 0;
 
@@ -41,18 +43,47 @@ void UpdateControls()
     {
         int scopeChange = patch.encoder.Increment();
         scopeIndex = (scopeIndex + scopeChange + 3) % 3;
+
+        if (scopeChange != 0)
+        {
+            pendingChangeParam = -1;
+        }
+        else if (pendingChangeParam == 0)
+        {
+            pendingChangeParam = 1;
+        }
     }
     else if (scopeIndex != 2)
     {
-        // scale current oscilloscope
-        int scale = patch.encoder.Increment();
-        if (scale < 0)
+        if (pendingChangeParam == 1)
         {
-            oscilloscopes[scopeIndex].SetScale(oscilloscopes[scopeIndex].GetScale() + 1);
+            encoderFunction = (encoderFunction + 1) % 2;
         }
-        if (scale > 0 && oscilloscopes[scopeIndex].GetScale() > 1)
+
+        pendingChangeParam = 0;
+
+        if (encoderFunction == 0)
         {
-            oscilloscopes[scopeIndex].SetScale(oscilloscopes[scopeIndex].GetScale() - 1);
+            // scale current oscilloscope
+            int scale = patch.encoder.Increment();
+            if (scale < 0)
+            {
+                oscilloscopes[scopeIndex].SetScale(oscilloscopes[scopeIndex].GetScale() + 1);
+            }
+            if (scale > 0 && oscilloscopes[scopeIndex].GetScale() > 1)
+            {
+                oscilloscopes[scopeIndex].SetScale(oscilloscopes[scopeIndex].GetScale() - 1);
+            }
+        }
+        else
+        {
+            // adjust gain of oscilloscope
+            int scale = patch.encoder.Increment();
+            if (scale != 0)
+            {
+                float gain = oscilloscopes[scopeIndex].GetGain() + (scale * 0.125f);
+                oscilloscopes[scopeIndex].SetGain(gain >= 0.f ? gain : 0.f);
+            }
         }
     }
 
@@ -118,12 +149,19 @@ void UpdateOled()
         patch.display.SetCursor(0, SSD1309_HEIGHT - 8);
         std::string str = std::to_string(oscilloscopes[scopeIndex].GetScale());
         char* s = &str[0];
-        patch.display.WriteString(s, Font_6x8, false);
+        patch.display.WriteString(s, Font_6x8, encoderFunction != 0);
+
+        // TODO: not working for some reason
+        patch.display.SetCursor(0, 0);
+        std::string str2 = std::to_string(oscilloscopes[scopeIndex].GetGain());
+        char* s2 = &str2[0];
+        patch.display.WriteString(s2, Font_6x8, encoderFunction != 1);
     }
     else
     {
         patch.display.Fill(true);
-        std::string str = "woof";
+        patch.display.SetCursor(0, SSD1309_HEIGHT - 22);
+        std::string str = "meow";
         char* s = &str[0];
         patch.display.WriteString(s, Font_11x18, false);
     }

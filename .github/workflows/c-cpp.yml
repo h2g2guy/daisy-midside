@@ -22,13 +22,13 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: electro-smith/libDaisy
-          path: libDaisy
+          path: libdaisy
           
       - name: checkout daisysp
         uses: actions/checkout@v2
         with:
           repository: electro-smith/DaisySP
-          path: DaisySP
+          path: daisysp
 
       - name: make
         run: |

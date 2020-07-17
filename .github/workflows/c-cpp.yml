@@ -27,7 +27,7 @@ jobs:
       - name: checkout daisysp
         uses: actions/checkout@v2
         with:
-          repository: electro-smith/DaisySP
+          repository: h2g2guy/DaisySP
           path: daisysp
           
       - name: install tooling

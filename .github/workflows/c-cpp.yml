@@ -21,7 +21,7 @@ jobs:
       - name: checkout libdaisy
         uses: actions/checkout@v2
         with:
-          repository: electro-smith/libDaisy
+          repository: h2g2guy/libDaisy
           path: libdaisy
           
       - name: checkout daisysp

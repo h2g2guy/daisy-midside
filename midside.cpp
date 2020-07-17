@@ -21,7 +21,8 @@ int bufferOffset = 0;
 
 Parameter bufferOffsetParam;
 
-Oscilloscope oscilloscope;
+Oscilloscope oscilloscopes[2];
+size_t scopeIndex;
 
 uint32_t lastScreenUpdate = 0;
 
@@ -34,15 +35,25 @@ void UpdateControls()
 //    sampHolds[0].Process(patch.gate_input[0].State(), patch.controls[0].Process());
 //    sampHolds[1].Process(patch.gate_input[1].State(), patch.controls[1].Process());
 //
+
     //encoder
-    int scale = patch.encoder.Increment();
-    if (scale < 0)
+    if (patch.encoder.Pressed())
     {
-        oscilloscope.SetScale(oscilloscope.GetScale() + 1);
+        int scopeChange = patch.encoder.Increment();
+        scopeIndex = (scopeIndex + scopeChange + 3) % 3;
     }
-    if (scale > 0 && oscilloscope.GetScale() > 1)
+    else if (scopeIndex != 2)
     {
-        oscilloscope.SetScale(oscilloscope.GetScale() - 1);
+        // scale current oscilloscope
+        int scale = patch.encoder.Increment();
+        if (scale < 0)
+        {
+            oscilloscopes[scopeIndex].SetScale(oscilloscopes[scopeIndex].GetScale() + 1);
+        }
+        if (scale > 0 && oscilloscopes[scopeIndex].GetScale() > 1)
+        {
+            oscilloscopes[scopeIndex].SetScale(oscilloscopes[scopeIndex].GetScale() - 1);
+        }
     }
 
     bufferOffset = bufferOffsetParam.Process();
@@ -97,15 +108,25 @@ void UpdateOutputs()
 
 void UpdateOled()
 {
-    patch.display.Fill(false);
+    if (scopeIndex < 2)
+    {
+        patch.display.Fill(false);
 
-    size_t indices[] = { (bufferIndex - bufferOffset + bufferSize) % bufferSize, bufferIndex };
-    oscilloscope.Draw(indices);
+        size_t indices[] = { (bufferIndex - bufferOffset + bufferSize) % bufferSize, bufferIndex };
+        oscilloscopes[scopeIndex].Draw(indices);
 
-    patch.display.SetCursor(0, SSD1309_HEIGHT - 8);
-    std::string str = std::to_string(oscilloscope.GetScale());
-    char* s = &str[0];
-    patch.display.WriteString(s, Font_6x8, false);
+        patch.display.SetCursor(0, SSD1309_HEIGHT - 8);
+        std::string str = std::to_string(oscilloscopes[scopeIndex].GetScale());
+        char* s = &str[0];
+        patch.display.WriteString(s, Font_6x8, false);
+    }
+    else
+    {
+        patch.display.Fill(true);
+        std::string str = "woof";
+        char* s = &str[0];
+        patch.display.WriteString(s, Font_11x18, false);
+    }
 
     patch.display.Update();
 }
@@ -123,25 +144,41 @@ int main()
 
     dsy_system_delay(5000);
 
-    Window windows[2];
-    windows[0].buffer = midBuffer;
-    windows[0].bufferLength = bufferSize;
-    windows[0].x = 0;
-    windows[0].y = 0;
-    windows[0].width = SSD1309_WIDTH;
-    windows[0].height = SSD1309_HEIGHT / 2;
+    Window scope1windows[2];
+    scope1windows[0].buffer = midBuffer;
+    scope1windows[0].bufferLength = bufferSize;
+    scope1windows[0].x = 0;
+    scope1windows[0].y = 0;
+    scope1windows[0].width = SSD1309_WIDTH;
+    scope1windows[0].height = SSD1309_HEIGHT / 2;
 
-    windows[1] = windows[0];
-    windows[1].buffer = returnBuffer;
-    windows[1].y = SSD1309_HEIGHT / 2;
+    scope1windows[1] = scope1windows[0];
+    scope1windows[1].buffer = returnBuffer;
+    scope1windows[1].y = SSD1309_HEIGHT / 2;
 
     OscilloscopeParams params;
     params.display = &patch.display;
-    params.windows = windows;
+    params.windows = scope1windows;
     params.windowCount = 2;
     params.syncChannel = 0;
 
-    oscilloscope.Init(params);
+    oscilloscopes[0].Init(params);
+
+    Window scope2window;
+    scope2window.buffer = sideBuffer;
+    scope2window.bufferLength = bufferSize;
+    scope2window.x = 0;
+    scope2window.y = 0;
+    scope2window.width = SSD1309_WIDTH;
+    scope2window.height = SSD1309_HEIGHT;
+
+    OscilloscopeParams params2;
+    params2.display = &patch.display;
+    params2.windows = &scope2window;
+    params2.windowCount = 1;
+    params2.syncChannel = 0;
+
+    oscilloscopes[1].Init(params2);
 
     while(1)
     {

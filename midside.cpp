@@ -25,10 +25,40 @@ Oscilloscope oscilloscope;
 
 uint32_t lastScreenUpdate = 0;
 
-void AudioCallback(float** in, float** out, size_t size)
+void UpdateControls()
 {
     patch.UpdateAnalogControls();
+    patch.DebounceControls();
+
+//    //read ctrls and gates, then update sampleholds
+//    sampHolds[0].Process(patch.gate_input[0].State(), patch.controls[0].Process());
+//    sampHolds[1].Process(patch.gate_input[1].State(), patch.controls[1].Process());
+//
+    //encoder
+    int scale = patch.encoder.Increment();
+    if (scale < 0)
+    {
+        oscilloscope.SetScale(oscilloscope.GetScale() + 1);
+    }
+    if (scale > 0 && oscilloscope.GetScale() > 1)
+    {
+        oscilloscope.SetScale(oscilloscope.GetScale() - 1);
+    }
+
     bufferOffset = bufferOffsetParam.Process();
+
+//    menuPos = (menuPos % 2 + 2) % 2;
+//
+//    //switch modes
+//    if(patch.encoder.RisingEdge())
+//    {
+//        sampHolds[menuPos].mode = (SampleHold::Mode)((sampHolds[menuPos].mode + 1) % 2);
+//    }
+}
+
+void AudioCallback(float** in, float** out, size_t size)
+{
+    UpdateControls();
 
     for (size_t i = 0; i < size; i++)
     {
@@ -58,34 +88,6 @@ void AudioCallback(float** in, float** out, size_t size)
     samplesPerCallback = size;
 }
 
-void UpdateControls()
-{
-    patch.UpdateAnalogControls();
-    patch.DebounceControls();
-//
-//    //read ctrls and gates, then update sampleholds
-//    sampHolds[0].Process(patch.gate_input[0].State(), patch.controls[0].Process());
-//    sampHolds[1].Process(patch.gate_input[1].State(), patch.controls[1].Process());
-//
-    //encoder
-    int scale = patch.encoder.Increment();
-    if (scale < 0)
-    {
-        oscilloscope.SetScale(oscilloscope.GetScale() + 1);
-    }
-    if (scale > 0 && oscilloscope.GetScale() > 1)
-    {
-        oscilloscope.SetScale(oscilloscope.GetScale() - 1);
-    }
-
-//    menuPos = (menuPos % 2 + 2) % 2;
-//
-//    //switch modes
-//    if(patch.encoder.RisingEdge())
-//    {
-//        sampHolds[menuPos].mode = (SampleHold::Mode)((sampHolds[menuPos].mode + 1) % 2);
-//    }
-}
 
 void UpdateOutputs()
 {
@@ -143,8 +145,7 @@ int main()
 
     while(1)
     {
-        UpdateControls();
-        UpdateOutputs();
+        // UpdateOutputs();
         if (dsy_system_getnow() - lastScreenUpdate > 17)
         {
             UpdateOled();

@@ -27,24 +27,47 @@ constexpr int wrap(int i, int mod)
 
 int Oscilloscope::getZeroCrossingOffset(size_t* currentIndices)
 {
-    if (syncChannel == NoSync)
+    // Get the largest window we'll need to fill, and the smallest buffer; this info will be important regardless
+    // of what we do.
+    unsigned int maxWindow = 0;
+    size_t minBuffer = SIZE_MAX;
+
+    for (unsigned int i = 0; i < windowCount; i++)
     {
-        return 1;
+        if (maxWindow < windows[i].width)
+        {
+            maxWindow = windows[i].width;
+        }
+
+        if (minBuffer > windows[i].bufferLength)
+        {
+            minBuffer = windows[i].bufferLength;
+        }
     }
 
-    // Try to find an upward zero crossing
+    if (maxWindow > minBuffer)
+    {
+        return -1;
+    }
+
+    if (syncChannel == NoSync)
+    {
+        return maxWindow;
+    }
+
+    // Either find an upward zero crossing, or look back as far as the start of the buffer
     float* buffer = windows[syncChannel].buffer;
     int bufferLength = windows[syncChannel].bufferLength;
     int now = currentIndices[syncChannel];
-    int offset = 0;
+    int offset = windows[syncChannel].width;
 
     int curr, next;
-    while (offset < bufferLength)
+    while (offset < bufferLength - 1)
     {
         offset++;
 
-        curr = wrap(now + offset, bufferLength);
-        next = wrap(now + offset + 1, bufferLength);
+        curr = wrap(now - offset, bufferLength);
+        next = wrap(now - offset + 1, bufferLength);
 
         if (buffer[curr] <= 0.f && buffer[next] >= 0.f)
         {
@@ -93,6 +116,6 @@ void Oscilloscope::Draw(size_t* currentIndices)
 
     for (size_t i = 0; i < windowCount; i++)
     {
-        drawWindow(windows[i], wrap(currentIndices[i] + offset, windows[i].bufferLength));
+        drawWindow(windows[i], wrap(currentIndices[i] - offset, windows[i].bufferLength));
     }
 }

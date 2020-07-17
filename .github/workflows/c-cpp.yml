@@ -32,8 +32,17 @@ jobs:
           
       - name: install tooling
         run: sudo apt-get install gcc-arm-none-eabi
+      
+      - name: build libraries
+        run: |
+          cd libdaisy
+          make
+          cd $GITHUB_WORKSPACE
+          cd daisysp
+          make
 
       - name: make
         run: |
+          cd $GITHUB_WORKSPACE
           cd midside
           make

@@ -59,7 +59,7 @@ int Oscilloscope::getZeroCrossingOffset(size_t* currentIndices)
     float* buffer = windows[syncChannel].buffer;
     int bufferLength = windows[syncChannel].bufferLength;
     int now = currentIndices[syncChannel];
-    int offset = windows[syncChannel].width;
+    int offset = windows[syncChannel].width * scale;
 
     int curr, next;
     while (offset < bufferLength - 1)

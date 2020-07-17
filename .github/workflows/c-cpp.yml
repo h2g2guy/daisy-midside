@@ -13,6 +13,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: make
-      run: make
+      - name: checkout this repo
+        uses: actions/checkout@v2
+        with:
+          path: midside
+
+      - name: checkout libdaisy
+        uses: actions/checkout@v2
+        with:
+          repository: electro-smith/libDaisy
+          path: libDaisy
+          
+      - name: checkout daisysp
+        uses: actions/checkout@v2
+        with:
+          repository: electro-smith/DaisySP
+          path: DaisySP
+
+      - name: make
+        run: |
+          cd midside
+          make

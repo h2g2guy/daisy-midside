@@ -13,7 +13,9 @@ DaisyPatch patch;
 
 int samplesPerCallback = 0;
 
-float audioBuffer[bufferSize] = { 0 };
+float midBuffer[bufferSize] = { 0 };
+float returnBuffer[bufferSize] = { 0 };
+float sideBuffer[bufferSize] = { 0 };
 size_t bufferIndex = 0;
 int bufferOffset = 0;
 
@@ -31,16 +33,16 @@ void AudioCallback(float** in, float** out, size_t size)
     for (size_t i = 0; i < size; i++)
     {
         // Send the mid input via the first output, and store it in the buffer
-        float mid = audioBuffer[bufferIndex] = out[0][i] = in[0][i];
+        float mid = midBuffer[bufferIndex] = out[0][i] = in[0][i];
 
         // Retrieve the return signal
-        float returned = in[1][i];
+        float returned = returnBuffer[bufferIndex] = in[1][i];
 
         // Decide where to read from the buffer
         int bufferReadIndex = (bufferIndex - bufferOffset + bufferSize) % bufferSize;
 
         // Calculate the side signal by subtracting the return from the mid; allow monitoring from the second output
-        float side = out[1][i] = audioBuffer[bufferReadIndex] - returned;
+        float side = sideBuffer[bufferIndex] = out[1][i] = midBuffer[bufferReadIndex] - returned;
 
         // Get mid and side output levels based on controls
         mid *= patch.controls[0].Value();
@@ -95,7 +97,7 @@ void UpdateOled()
 {
     patch.display.Fill(false);
 
-    size_t indices[] = { bufferIndex, bufferIndex };
+    size_t indices[] = { (bufferIndex - bufferOffset + bufferSize) % bufferSize, bufferIndex };
     oscilloscope.Draw(indices);
 
     patch.display.SetCursor(0, SSD1309_HEIGHT - 8);
@@ -120,7 +122,7 @@ int main()
     dsy_system_delay(5000);
 
     Window windows[2];
-    windows[0].buffer = audioBuffer;
+    windows[0].buffer = midBuffer;
     windows[0].bufferLength = bufferSize;
     windows[0].x = 0;
     windows[0].y = 0;
@@ -128,6 +130,7 @@ int main()
     windows[0].height = SSD1309_HEIGHT / 2;
 
     windows[1] = windows[0];
+    windows[1].buffer = returnBuffer;
     windows[1].y = SSD1309_HEIGHT / 2;
 
     OscilloscopeParams params;

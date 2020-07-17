@@ -17,6 +17,9 @@ void Oscilloscope::Init(OscilloscopeParams& params)
     initialized = true;
 }
 
+unsigned int Oscilloscope::GetScale() { return scale; }
+void Oscilloscope::SetScale(unsigned int xScale) { scale = xScale; }
+
 constexpr int wrap(int i, int mod)
 {
     return (i + mod) % mod;
@@ -82,7 +85,7 @@ void Oscilloscope::drawWindow(Window& w, size_t startingIndex)
 
     for (unsigned int i = 0; i < w.width; i++)
     {
-        int index = wrap(startingIndex + i, w.bufferLength);
+        int index = wrap(startingIndex + (i*scale), w.bufferLength);
 
         int height = static_cast<int>(w.buffer[index] * defaultGain * overallGain) + midHeight;
 
@@ -105,12 +108,9 @@ void Oscilloscope::Draw(size_t* currentIndices)
         display->WriteString(s1, Font_11x18, false);
         display->SetCursor(0, 18);
         display->WriteString(s2, Font_11x18, false);
-        display->Update();
 
         return;
     }
-
-    display->Fill(false);
 
     int offset = getZeroCrossingOffset(currentIndices);
 
@@ -118,6 +118,4 @@ void Oscilloscope::Draw(size_t* currentIndices)
     {
         drawWindow(windows[i], wrap(currentIndices[i] - offset, windows[i].bufferLength));
     }
-
-    display->Update();
 }

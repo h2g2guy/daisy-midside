@@ -21,6 +21,8 @@ Parameter bufferOffsetParam;
 
 Oscilloscope oscilloscope;
 
+uint32_t lastScreenUpdate = 0;
+
 void AudioCallback(float** in, float** out, size_t size)
 {
     patch.UpdateAnalogControls();
@@ -56,15 +58,24 @@ void AudioCallback(float** in, float** out, size_t size)
 
 void UpdateControls()
 {
-//    patch.UpdateAnalogControls();
-//    patch.DebounceControls();
+    patch.UpdateAnalogControls();
+    patch.DebounceControls();
 //
 //    //read ctrls and gates, then update sampleholds
 //    sampHolds[0].Process(patch.gate_input[0].State(), patch.controls[0].Process());
 //    sampHolds[1].Process(patch.gate_input[1].State(), patch.controls[1].Process());
 //
-//    //encoder
-//    menuPos += patch.encoder.Increment();
+    //encoder
+    int scale = patch.encoder.Increment();
+    if (scale < 0)
+    {
+        oscilloscope.SetScale(oscilloscope.GetScale() + 1);
+    }
+    if (scale > 0 && oscilloscope.GetScale() > 1)
+    {
+        oscilloscope.SetScale(oscilloscope.GetScale() - 1);
+    }
+
 //    menuPos = (menuPos % 2 + 2) % 2;
 //
 //    //switch modes
@@ -86,6 +97,11 @@ void UpdateOled()
 
     size_t indices[] = { bufferIndex, bufferIndex };
     oscilloscope.Draw(indices);
+
+    patch.display.SetCursor(0, SSD1309_HEIGHT - 8);
+    std::string str = std::to_string(oscilloscope.GetScale());
+    char* s = &str[0];
+    patch.display.WriteString(s, Font_6x8, false);
 
     patch.display.Update();
 }
@@ -126,7 +142,9 @@ int main()
     {
         UpdateControls();
         UpdateOutputs();
-        UpdateOled();
-        dsy_system_delay(50);
+        if (dsy_system_getnow() - lastScreenUpdate > 100)
+        {
+            UpdateOled();
+        }
     }
 }

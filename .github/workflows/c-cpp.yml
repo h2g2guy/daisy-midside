@@ -29,6 +29,9 @@ jobs:
         with:
           repository: electro-smith/DaisySP
           path: daisysp
+          
+      - name: install tooling
+        run: sudo apt-get install gcc-arm-none-eabi
 
       - name: make
         run: |

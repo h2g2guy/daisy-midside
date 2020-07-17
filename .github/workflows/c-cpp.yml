@@ -46,3 +46,11 @@ jobs:
           cd $GITHUB_WORKSPACE
           cd midside
           make
+          
+      - name: publish artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: MidSide.bin
+          path: midside/build/MidSide.bin
+       
+         

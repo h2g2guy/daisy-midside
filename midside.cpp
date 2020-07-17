@@ -84,7 +84,8 @@ void UpdateOled()
 {
     patch.display.Fill(false);
 
-    oscilloscope.Draw(&bufferIndex);
+    size_t indices[] = { bufferIndex, bufferIndex };
+    oscilloscope.Draw(indices);
 
     patch.display.Update();
 }
@@ -100,21 +101,26 @@ int main()
 
     bufferOffsetParam.Init(patch.controls[2], 0, 1024, Parameter::LINEAR);
 
-    Window window;
-    window.buffer = audioBuffer;
-    window.bufferLength = bufferSize;
-    window.x = 0;
-    window.y = 0;
-    window.width = SSD1309_WIDTH;
-    window.height = SSD1309_HEIGHT;
+    dsy_system_delay(5000);
+
+    Window windows[2];
+    windows[0].buffer = audioBuffer;
+    windows[0].bufferLength = bufferSize;
+    windows[0].x = 0;
+    windows[0].y = 0;
+    windows[0].width = SSD1309_WIDTH;
+    windows[0].height = SSD1309_HEIGHT / 2;
+
+    windows[1] = windows[0];
+    windows[1].y = SSD1309_HEIGHT / 2;
 
     OscilloscopeParams params;
     params.display = &patch.display;
-    params.windows = &window;
-    params.windowCount = 1;
+    params.windows = windows;
+    params.windowCount = 2;
     params.syncChannel = 0;
 
-    //oscilloscope = Oscilloscope(params);
+    oscilloscope.Init(params);
 
     while(1)
     {

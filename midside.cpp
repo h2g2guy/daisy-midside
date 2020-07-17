@@ -142,9 +142,10 @@ int main()
     {
         UpdateControls();
         UpdateOutputs();
-        if (dsy_system_getnow() - lastScreenUpdate > 100)
+        if (dsy_system_getnow() - lastScreenUpdate > 17)
         {
             UpdateOled();
+            lastScreenUpdate = dsy_system_getnow();
         }
     }
 }

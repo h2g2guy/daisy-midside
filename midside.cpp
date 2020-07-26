@@ -36,7 +36,6 @@ void UpdateControls()
 //    //read ctrls and gates, then update sampleholds
 //    sampHolds[0].Process(patch.gate_input[0].State(), patch.controls[0].Process());
 //    sampHolds[1].Process(patch.gate_input[1].State(), patch.controls[1].Process());
-//
 
     //encoder
     if (patch.encoder.Pressed())
@@ -89,13 +88,6 @@ void UpdateControls()
 
     bufferOffset = bufferOffsetParam.Process();
 
-//    menuPos = (menuPos % 2 + 2) % 2;
-//
-//    //switch modes
-//    if(patch.encoder.RisingEdge())
-//    {
-//        sampHolds[menuPos].mode = (SampleHold::Mode)((sampHolds[menuPos].mode + 1) % 2);
-//    }
 }
 
 void AudioCallback(float** in, float** out, size_t size)
@@ -131,11 +123,11 @@ void AudioCallback(float** in, float** out, size_t size)
 }
 
 
-void UpdateOutputs()
-{
+//void UpdateOutputs()
+//{
 //    dsy_dac_write(DSY_DAC_CHN1, sampHolds[0].output * 4095);
 //    dsy_dac_write(DSY_DAC_CHN2, sampHolds[1].output * 4095);
-}
+//}
 
 void UpdateOled()
 {
@@ -179,8 +171,6 @@ int main()
     patch.StartAudio(AudioCallback);
 
     bufferOffsetParam.Init(patch.controls[2], 0, 1024, Parameter::LINEAR);
-
-    dsy_system_delay(5000);
 
     Window scope1windows[2];
     scope1windows[0].buffer = midBuffer;

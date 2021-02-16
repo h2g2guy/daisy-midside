@@ -1,4 +1,6 @@
 # daisy-midside
+![build](https://github.com/h2g2guy/daisy-midside/workflows/C/C++%20CI/badge.svg)
+
 A Daisy Patch based module that can turn any FX module into a wild stereo effect.
 
 ## What?
